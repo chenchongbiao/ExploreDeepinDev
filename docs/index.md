@@ -10,9 +10,9 @@ hero:
     - theme: brand
       text: 前言 我的Linux探索之路
       link: /preface
-    #- theme: alt
-      #text: API Examples
-      #link: /api-examples
+    - theme: alt
+      text: 大学生开发系统选择
+      link: /system/select-operation-system
 
 features:
   - title: 占位
