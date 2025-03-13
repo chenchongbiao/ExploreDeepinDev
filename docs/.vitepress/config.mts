@@ -12,7 +12,7 @@ export default defineConfig({
       {
         text: '技术星图',
         items: [
-          { text: "", link: '...' }
+          { text: "chroot：从原理到实践", link: '/code-spectrum/chroot.md' }
         ]
       },
       {
