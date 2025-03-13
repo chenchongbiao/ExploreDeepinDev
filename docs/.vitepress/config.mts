@@ -10,7 +10,13 @@ export default defineConfig({
     nav: [
       { text: 'Home', link: '/' },
       {
-        text: '工具的介绍',
+        text: '技术星图',
+        items: [
+          { text: "", link: '...' }
+        ]
+      },
+      {
+        text: '工具及网站的介绍',
         items: [
           {
             text: '代码管理',
@@ -23,13 +29,16 @@ export default defineConfig({
       {
         text: '操作系统',
         items: [
-          { text: 'Linux 系统', link: '/system/linux.md' },
+          { text: '深入理解 Linux 系统的核心', link: '/system/linux' },
+          { text: 'Linux 系统与发行版的关系——从安卓到 deepin 的多样性', link: '/system/linux-distro' },
+          { text: 'U-Boot与GRUB引导机制', link: '/system/uboot-grub' },
+          { text: 'ISO与IMG镜像的全面对比', link: '/system/iso-img' },
           { text: '虚拟机软件', link: '...' },
           {
             text: '系统移植',
             items: [
-              { text: '树莓派移植 deepin 系统', link: '/system/system-porting/deepin-raspberrypi.md' },
-              { text: 'RDK-X5 移植 deepin 系统', link: '/system/system-porting/rdk-x5.md' },
+              { text: '树莓派移植 deepin 系统', link: '/system/system-porting/deepin-raspberrypi' },
+              { text: 'RDK-X5 移植 deepin 系统', link: '/system/system-porting/rdk-x5' },
             ]
           },
         ]
@@ -76,8 +85,8 @@ export default defineConfig({
         {
           text: '系统移植',
           items: [
-            { text: '树莓派移植 deepin 系统', link: '/system/system-porting/deepin-raspberrypi.md' },
-            { text: 'RDK X5 移植 deepin 系统', link: '/system/system-porting/rdk-x5.md' },
+            { text: '树莓派移植 deepin 系统', link: '/system/system-porting/deepin-raspberrypi' },
+            { text: 'RDK X5 移植 deepin 系统', link: '/system/system-porting/rdk-x5' },
           ]
         }
       ],
