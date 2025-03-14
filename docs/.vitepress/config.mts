@@ -53,9 +53,9 @@ export default defineConfig({
             ]
           },
           {
-            text: 'C++',
+            text: 'C',
             items: [
-              { text: '还在用VC6写C语言的你，真的不考虑换个星球生活吗？', link: '/dev-environment-guide/languages/C/Goodbye-VC6-Hello-GCC-On-deepin' },
+              { text: '还在用VC6写C语言吗？', link: '/dev-environment-guide/languages/C/Goodbye-VC6-Hello-GCC-On-deepin' },
               { text: '配置环境', link: '/dev-environment-guide/languages/C/deepin-c' },
               { text: '基础语法', link: '...' },
             ]
@@ -98,6 +98,15 @@ export default defineConfig({
           ]
         }
       ],
+      '/dev-environment-guide/languages/C': [
+        {
+          text: 'C',
+          items: [
+            { text: '还在用VC6写C语言吗？', link: '/dev-environment-guide/languages/C/Goodbye-VC6-Hello-GCC-On-deepin' },
+            { text: '配置环境', link: '/dev-environment-guide/languages/C/deepin-c' },
+          ]
+        }
+      ]
     },
 
     socialLinks: [
