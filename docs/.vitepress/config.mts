@@ -81,6 +81,7 @@ export default defineConfig({
           {
             text: 'Python',
             items: [
+              { text: '配置环境', link: '/dev-environment-guide/languages/Python/deepin-python' },
               { text: '基础语法', link: '...' },
             ]
           },
@@ -104,6 +105,14 @@ export default defineConfig({
           items: [
             { text: '还在用VC6写C语言吗？', link: '/dev-environment-guide/languages/C/Goodbye-VC6-Hello-GCC-On-deepin' },
             { text: '配置环境', link: '/dev-environment-guide/languages/C/deepin-c' },
+          ]
+        }
+      ],
+      '/dev-environment-guide/languages/Python': [
+        {
+          text: 'Python',
+          items: [
+            { text: '配置环境', link: '/dev-environment-guide/languages/Python/deepin-python' },
           ]
         }
       ]
