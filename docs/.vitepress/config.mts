@@ -33,12 +33,13 @@ export default defineConfig({
           { text: 'Linux 系统与发行版的关系——从安卓到 deepin 的多样性', link: '/system/linux-distro' },
           { text: 'U-Boot与GRUB引导机制', link: '/system/uboot-grub' },
           { text: 'ISO与IMG镜像的全面对比', link: '/system/iso-img' },
-          { text: '虚拟机软件', link: '...' },
+          { text: '虚拟机软件', link: '/system/CodeVM-Lab.md' },
           {
             text: '系统移植',
             items: [
               { text: '树莓派移植 deepin 系统', link: '/system/system-porting/deepin-raspberrypi' },
               { text: 'RDK-X5 移植 deepin 系统', link: '/system/system-porting/rdk-x5' },
+              { text: '随身WIFI安装 Debian 流程', link: '/system/system-porting/Qualcomm410' },
             ]
           },
         ]
