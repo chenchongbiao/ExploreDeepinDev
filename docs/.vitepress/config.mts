@@ -39,7 +39,7 @@ export default defineConfig({
             items: [
               { text: '树莓派移植 deepin 系统', link: '/system/system-porting/deepin-raspberrypi' },
               { text: 'RDK-X5 移植 deepin 系统', link: '/system/system-porting/rdk-x5' },
-              { text: '随身WIFI安装 Debian 流程', link: '/system/system-porting/Qualcomm410' },
+              { text: '随身WIFI安装 deepin 流程', link: '/system/system-porting/Qualcomm410' },
             ]
           },
         ]
@@ -97,6 +97,7 @@ export default defineConfig({
           items: [
             { text: '树莓派移植 deepin 系统', link: '/system/system-porting/deepin-raspberrypi' },
             { text: 'RDK X5 移植 deepin 系统', link: '/system/system-porting/rdk-x5' },
+            { text: '随身WIFI安装 deepin 流程', link: '/system/system-porting/Qualcomm410' },
           ]
         }
       ],

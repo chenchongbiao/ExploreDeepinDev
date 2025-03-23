@@ -1,6 +1,6 @@
 ## 介绍
 
-买了个高通处理器的4g无线网卡。学习下移植内容。这里参考的 CSDN 上的作者 HandsomeHacker 做一个反编译设备树的内容。发现作者还有小米平板4移植的内容。有机会看看。
+买了个高通骁龙410处理器的随身WIFI(咸鱼购买22，)。学习下系统移植内容。这里参考的 CSDN 上的作者 HandsomeHacker 做一个反编译设备树的内容。以下操作均可在 deepin 系统上完成操作。这里是 OpenStick 提供的系统内核 + deepin 25 的根文件系统。如果需要其他发行版自行修改，你问我能跑啥服务，没什么大型服务能跑，就是简单作为一个系统移植的内容学习和分享，成本不高。制作系统的过程中参考了很多帖子，adbd 服务没有正确启动的问题，HandsomeHacker 给我解答了 mobile-usb-gadget 启动脚本的修改，使用到大佬的开源项目 [android-tools](https://github.com/HandsomeYingyan/android-tools.git) 和 [gc](https://github.com/HandsomeMod/gc.git) 。学习下来非常有收获。
 
 ## 导出 emmc 数据
 
@@ -139,7 +139,7 @@ done
 ╰─❯ adb pull /proc/device-tree/qcom,board-id
 /proc/device-tree/qcom,board-id: 1 file pulled. 0.0 MB/s (8 bytes in 0.042s)
 
-╭─ ~/build/dumps                                            
+╭─ ~/build/dumps                                  
 ╰─❯ adb pull /proc/device-tree/qcom,msm-id
 /proc/device-tree/qcom,msm-id: 1 file pulled. 0.0 MB/s (32 bytes in 0.041s)
 
@@ -519,13 +519,7 @@ int target_home()
 
 前面编译的lk2nd已经是修改后的代码了，这里不需要修改。
 
-最后刷入 https://www.123pan.com/s/XwVDVv-WICn3 提供了 debian 包，另外的在win下移除原本识别的安卓驱动，重新安装usb的驱动
-
-参考 https://blog.csdn.net/hmc_123/article/details/126752673?spm=1001.2014.3001.5506 这部分内容进行操作。
-
-## 镜像制作
-
-### 根文件系统制作
+## 根文件系统制作
 
 ```bash
 mkdir -p rootfs
@@ -539,7 +533,143 @@ sudo mmdebstrap \
     "deb https://proposed-packages.deepin.com/beige-testing/ unstable/25 main commercial community"
 ```
 
-### 镜像制作
+### 挂载 chroot
+
+```bash
+sudo mount -t tmpfs -o "size=99%" tmpfs rootfs/tmp
+sudo mount -t tmpfs -o "size=99%" tmpfs rootfs/var/tmp
+sudo mount -t proc chproc rootfs/proc
+sudo mount -t sysfs chsys rootfs/sys
+sudo mount --bind /dev rootfs/dev
+sudo mount -t devpts devpts rootfs/dev/pts
+sudo mount --bind /etc/resolv.conf rootfs/etc/resolv.conf
+```
+
+### 用户与本地化
+
+```bash
+(chroot) useradd  -s /bin/bash -m -g users deepin
+(chroot) usermod -a -G sudo deepin
+(chroot) chsh -s /bin/bash deepin
+(chroot) echo root:deepin | chpasswd
+(chroot) echo deepin:deepin | chpasswd
+# 取消注释
+(chroot) sed -i -E 's/#[[:space:]]*(en_US.UTF-8[[:space:]]+UTF-8)/\1/g' /etc/locale.gen
+(chroot) sed -i -E 's/#[[:space:]]*(zh_CN.UTF-8[[:space:]]+UTF-8)/\1/g' /etc/locale.gen
+# 生成语言设置
+(chroot) locale-gen
+
+# 设置本地上海时区
+(chroot) ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+```
+
+### wifi 驱动
+
+这里从原作者给出根文件系统拷贝 /lib/firmware/* 里的驱动到新制作的根文件系统，这里还没看驱动是从哪里编译的。
+
+```bash
+sudo cp -a tmp/lib/firmware/* rootfs/lib/firmware
+```
+
+### 添加 adbd 服务
+
+```bash
+git clone https://github.com/HandsomeYingyan/android-tools.git
+
+# 添加额外的软件包
+sudo curl -L http://repo.mobian-project.org/mobian.gpg -o rootfs/etc/apt/trusted.gpg.d/mobian.gpg
+echo "deb http://repo.mobian-project.org/ bookworm main non-free" | sudo tee rootfs/etc/apt/sources.list.d/mobian.list
+
+sudo chroot rootfs bash
+
+(chroot) apt update
+(chroot) apt install mobian-tweaks-common mobile-usb-networking
+(chroot) apt install make zlib1g-dev pkgconf libssl-dev
+(chroot) cd android-tools
+# 编译 adbd 服务
+(chroot) make -f adbd.mk
+(chroot) cp adbd /usr/bin/adbd
+```
+
+### 添加 gc 服务
+
+```bash
+# gc 的仓库，这里从原作者发布的Debian根文件系统里的直接拷贝
+git clone https://github.com/HandsomeMod/gc.git
+
+# libusbgx的动态库从这个仓库编译，这里从原作者发布的Debian根文件系统里的动态库直接拷贝
+git clone https://github.com/linux-usb-gadgets/libusbgx.git
+
+sudo chroot rootfs bash
+
+(chroot) apt install libconfig9
+# 测试下gc 命令
+(chroot) gc
+```
+
+### 修改 mobile-usb-gadget 服务
+
+这里修改原本的 mobile-usb-gadget 脚本
+
+```bash
+sudo vim rootfs/usr/sbin/mobile-usb-gadget
+```
+
+```bash
+#!/bin/sh
+
+CONFIGFS=/sys/kernel/config/usb_gadget/g1
+
+setup() {
+#echo host > /sys/kernel/debug/usb/ci_hdrc.0/role
+    # Remove All Gadgets If Gadget Exist
+    [ -d $CONFIGFS ] && gc -c
+
+    # Setiing Up Rndis
+    gc -a rndis
+    sleep 1
+
+    # Setting Up Adbd
+    gc -a ffs
+    mkdir -p /dev/usb-ffs/adb
+
+    # in offical version of gc name will be ffs.x
+    mount -t functionfs adb /dev/usb-ffs/adb
+
+    # Fire Up Adbd
+    adbd -D &
+    # (hack) wait adbd setup
+    sleep 1
+
+    # Enable Gadget
+    gc -e
+
+}
+
+reset() {
+    echo "Removing the USB gadget..."
+
+    # Remove USB gadget
+    if [ -d $CONFIGFS ]; then
+        echo "Removing gadget configuration..."
+        gc -c
+    fi
+}
+
+case "$1" in
+    reset) reset ;;
+    setup) setup ;;
+    *) ;;
+esac
+```
+
+### 清除缓存
+
+```bash
+(chroot) apt clean && rm -rf /var/cache/apt/archives/*
+```
+
+## 镜像制作
 
 这里不重新构建内核，先用 openstick 提供的内核和boot.img，启动的磁盘已经写死到 boot.img 这里创建一个磁盘并设置原本的 UUID，
 
@@ -561,7 +691,7 @@ sudo cp -a tmp/modules/5.15.0-handsomekernel+ rootfs/modules
 创建一个新磁盘
 
 ```bash
-dd if=/dev/zero of=root.img bs=1M count=1200
+dd if=/dev/zero of=root.img bs=1M count=1300
 mkfs.ext4 -L rootfs -b 4096 root.img
 
 # 这里不替换原本的boot.img 这里把新的磁盘镜像设置与原本的rootfs.img一样的UUID
