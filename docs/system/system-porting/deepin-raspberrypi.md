@@ -8,17 +8,7 @@
 
 ---
 
-## **技术扫盲**
-
-### **Linux系统是什么？**
-
-[深入理解 Linux 系统的核心](../linux)
-
-[Linux 系统与发行版的关系——从安卓到 deepin 的多样性](../linux-distro)
-
-### **引导流程**
-
-[U-Boot与GRUB引导机制对比](../uboot-grub.md)
+<!--@include: ./include/Technical-literacy.md-->
 
 ### **树莓派与Linux的关系**
 
@@ -34,122 +24,9 @@
   > *注：树莓派默认使用**GPU固件+配置文件**（如 `config.txt`）引导，U-Boot常用于深度定制场景。
   >
 
-### **系统镜像类型：ISO vs IMG**
+<!--@include: ./include/install-base-tools.md-->
 
-[ISO与IMG镜像的全面对比](../iso-img.md)
-
-## **安装基础工具链**
-
-```bash
-sudo apt update -y
-sudo apt-get install -y qemu-user-static binfmt-support mmdebstrap arch-test usrmerge usr-is-merged fdisk dosfstools
-sudo systemctl restart systemd-binfmt  # 重启 binfmt 服务加载ARM支持
-```
-
-::: details 点击查看解析
-**异架构模拟 (`qemu-user-static` + `binfmt-support`)**
-
-- **核心原理**：
-  - `qemu-user-static` 提供静态编译的跨架构模拟器（如 `qemu-aarch64-static`），允许在x86主机直接执行ARM程序。
-  - `binfmt-support` 向内核注册二进制格式解释器，自动触发QEMU对ARM程序转译（无需手动指定）。
-- **验证方法**：
-  ```bash
-  # 查看已注册的架构支持
-  ls /proc/sys/fs/binfmt_misc/
-
-  # 测试ARM程序执行
-  qemu-aarch64-static /path/to/arm64-binary
-  ```
-
-:::
-
-## **根文件系统构建**
-
-### **使用 mmdebstrap 创建基础系统**
-
-```bash
-mkdir -p rootfs
-sudo mmdebstrap \
-    --hook-dir=/usr/share/mmdebstrap/hooks/merged-usr \
-    --include="ca-certificates,locales,sudo,apt,adduser,polkitd,systemd,network-manager,dbus-daemon,apt-utils,bash-completion,curl,vim,bash,deepin-keyring,init,ssh,net-tools,iputils-ping,lshw,iproute2,iptables,procps,wpasupplicant,dmidecode,ntpsec-ntpdate,linux-firmware" \
-    --architectures=arm64 \
-    beige \
-    rootfs \
-    "deb https://community-packages.deepin.com/beige/ beige main commercial community" \
-    "deb https://proposed-packages.deepin.com/beige-testing/ unstable/25 main commercial community"
-```
-
-::: details 点击查看解析
-
-[深入理解 Linux 系统的核心](../linux)
-
-### **基本命令与权限**
-
-```bash
-sudo mmdebstrap
-```
-
-- **`sudo`**: 以管理员权限运行，因为创建根文件系统需要操作底层文件。
-- **`mmdebstrap`**: 一个高效的 Debian/Ubuntu 根文件系统构建工具，支持多架构和自定义配置。
-
----
-
-### **钩子目录（合并 `/usr` 结构）**
-
-```bash
---hook-dir=/usr/share/mmdebstrap/hooks/merged-usr
-```
-
-- **`--hook-dir`**: 指定一个钩子脚本目录，用于在构建过程中执行自定义操作。
-- **`merged-usr`**: 钩子脚本确保文件系统采用 `/usr` 合并结构（即 `/bin`、`/sbin`、`/lib` 等目录符号链接到 `/usr` 下的对应目录），这是现代 Linux 系统的常见实践。
-
----
-
-### 3. **包含的软件包**
-
-```bash
---include="ca-certificates,locales,sudo,apt,...,dmidecode,ntpsec-ntpdate,linux-firmware"
-```
-
-- **`--include`**: 指定要安装的基础软件包列表，例如：
-  - **系统工具**: `systemd`（初始化系统）、`polkitd`（权限管理）、`apt`（包管理工具）。
-  - **网络工具**: `network-manager`（网络管理）、`ssh`（远程登录）、`net-tools`、`iproute2`、`wpasupplicant`（无线网络）。
-  - **调试工具**: `vim`（文本编辑）、`curl`（网络请求）、`iputils-ping`（网络测试）、`dmidecode`（硬件信息）。
-  - **驱动与固件**: `linux-firmware`（硬件驱动固件）。
-  - **本地化与安全**: `locales`（语言支持）、`ca-certificates`（HTTPS 证书）。
-
----
-
-### **目标架构**
-
-```bash
---architectures=arm64
-```
-
-- **`--architectures=arm64`**: 指定生成的根文件系统为 ARM64 架构（适用于树莓派、嵌入式设备等）。
-
----
-
-### **发行版与输出目录**
-
-```bash
-beige
-rootfs
-```
-
-- **`beige`**: deepin 的版本代号。
-- **`rootfs`**: 生成的根文件系统将保存在当前目录的 `rootfs` 文件夹中。
-
----
-
-### **软件源配置**
-
-```bash
-"deb https://community-packages.deepin.com/beige/ beige main commercial community"
-"deb https://proposed-packages.deepin.com/beige-testing/ unstable/25 main commercial community"
-```
-
-:::
+<!--@include: ./include/mmdebstrap.md-->
 
 ## **磁盘镜像制作**
 
@@ -197,7 +74,19 @@ dd if=/dev/zero of=deepin-raspberrypi.img bs=1M count=4096
 
 ```bash
 sudo fdisk deepin-raspberrypi.img << EOF
-...
+n       # 新建分区
+p       # 创建主分区
+1       # 分区号为1
+        # 起始扇区默认（由 fdisk 自动选择对齐的起始位置，例如 2048 或 8192）
++300M   # 分区大小为300MB
+t       # 更改分区类型
+c       # 设置为 FAT32 (LBA) 类型（类型代码 `0c` 的简写）
+n       # 新建第二个分区
+p       # 主分区
+2       # 分区号为2
+        # 起始扇区默认（紧接第一个分区的结束位置）
+        # 结束扇区默认（占用剩余所有空间）
+w       # 写入分区表并退出
 EOF
 ```
 
@@ -225,7 +114,7 @@ w       # 写入分区表并退出
 ```
 
 - **分区1**：300MiB FAT32格式（通常用于/boot启动分区）
-- **分区2**：剩余空间（约1.7GiB）用于根文件系统
+- **分区2**：剩余空间（约3.7GiB）用于根文件系统
 
 ---
 
@@ -238,7 +127,7 @@ w       # 写入分区表并退出
 `<< EOF`到 `EOF`之间的内容会作为标准输入传递给前序命令，实现自动化交互操作，避免手动输入。
 
 **🔹 分区类型选择**
-`c`类型对应FAT32，这是树莓派启动分区的标准要求。第二个分区通常使用Linux原生类型（默认83），但此处未显式设置。
+`c`类型对应FAT32，这是启动分区的标准要求。第二个分区通常使用Linux原生类型（默认83），但此处未显式设置。
 
 ---
 
@@ -249,7 +138,7 @@ w       # 写入分区表并退出
 ```
 deepin-raspberrypi.img
 ├─p1 : 300MiB FAT32 (启动分区)
-└─p2 : 1.7GiB Linux分区
+└─p2 : 3.7GiB Linux分区
 ```
 
 后续可通过 `losetup` 挂载镜像，进行文件系统格式化和系统文件写入。
@@ -487,65 +376,9 @@ LABEL=rootfs  /               ext4    defaults,rw,errors=remount-ro,x-systemd.gr
 EOF
 ```
 
-## **系统个性化配置**
+<!--@include: ./include/personalization.md-->
 
-### **用户与本地化**
-
-```bash
-# 创建用户并设置密码
-(chroot) useradd -m deepin && usermod -aG sudo deepin
-(chroot) echo 'deepin:deepin' | chpasswd
-(chroot) chsh -s /bin/bash deepin
-```
-
-```bash
-# 取消注释
-(chroot) sed -i -E 's/#[[:space:]]*(en_US.UTF-8[[:space:]]+UTF-8)/\1/g' /etc/locale.gen
-(chroot) sed -i -E 's/#[[:space:]]*(zh_CN.UTF-8[[:space:]]+UTF-8)/\1/g' /etc/locale.gen
-# 生成语言设置
-(chroot) locale-gen
-```
-
-```bash
-# 设置中文
-(chroot) tee /etc/locale.conf << EOF
-LANG=zh_CN.UTF-8
-LANGUAGE=zh_CN
-EOF
-```
-
-```bash
-# 设置本地上海时区
-(chroot) ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-```
-
-## **清理与压缩**
-
-**清理软件包缓存**
-
-```bash
-(chroot) apt clean && rm -rf /var/cache/apt/archives/*
-(chroot) exit
-```
-
-**卸载挂载点**
-
-```bash
-sudo umount -l tmp
-```
-
-**强制文件系统检查**
-
-```bash
-sudo e2fsck -f "${LOOP}p2"
-```
-
-**解除回环设备**
-
-```bash
-# 解除回环设备
-sudo losetup -D $LOOP
-```
+<!--@include: ./include/clean.md-->
 
 ## 烧录镜像
 
@@ -597,7 +430,7 @@ cd deepin-raspberrypi
 ./build.sh desktop
 ```
 
-经过前面的讲解，这里大家应该能明白一个系统的磁盘镜像是如果制作的。这里是以 deepin 和树莓派做一个举例，其他的开发板，x86_64、loongarch64、riscv64 等架构的系统是可以遵循这个思路的。后续会分享相关的其他例子给大家。
+经过前面的讲解，这里大家应该能明白一个系统的磁盘镜像是如果制作的。这里是以 deepin 和树莓派做一个举例，其他架构的系统，x86_64、loongarch64、riscv64 等架构的系统是可以遵循这个思路的。后续会分享相关的其他例子给大家。
 
 ## 视频
 
