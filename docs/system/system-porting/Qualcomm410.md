@@ -173,7 +173,7 @@ Qualcomm Technologies, Inc. MSM 8916 512MB MTP
 
 对比 board-id，msm-id 也是匹配的。
 
-```bashj
+```bash
 /dts-v1/;
 
 / {

@@ -16,7 +16,7 @@ sudo mmdebstrap \
 
 ::: details 点击查看解析
 
-[深入理解 Linux 系统的核心](../linux)
+[深入理解 Linux 系统的核心](/system/linux)
 
 ### **基本命令与权限**
 
