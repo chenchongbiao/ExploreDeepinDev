@@ -32,8 +32,10 @@ export default defineConfig({
           { text: '深入理解 Linux 系统的核心', link: '/system/linux' },
           { text: 'Linux 系统与发行版的关系——从安卓到 deepin 的多样性', link: '/system/linux-distro' },
           { text: 'U-Boot与GRUB引导机制', link: '/system/uboot-grub' },
+          { text: 'UEFI vs 传统 BIOS对比', link: '/system/uefi-and-legacy' },
           { text: 'ISO与IMG镜像的全面对比', link: '/system/iso-img' },
-          { text: '虚拟机软件', link: '/system/CodeVM-Lab.md' },
+          { text: '虚拟机软件', link: '/system/CodeVM-Lab' },
+          { text: '安装 deepin 系统', link: '/system/install-deepin' },
           {
             text: '系统移植',
             items: [
@@ -98,6 +100,7 @@ export default defineConfig({
             { text: '树莓派移植 deepin 系统', link: '/system/system-porting/deepin-raspberrypi' },
             { text: 'RDK X5 移植 deepin 系统', link: '/system/system-porting/rdk-x5' },
             { text: '随身WIFI安装 deepin 流程', link: '/system/system-porting/Qualcomm410' },
+            { text: '翡丽 F12 平板移植 deepin 流程', link: '/system/system-porting/fily-f12pad' },
           ]
         }
       ],
