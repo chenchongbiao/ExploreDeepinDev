@@ -139,7 +139,7 @@ done
 ╰─❯ adb pull /proc/device-tree/qcom,board-id
 /proc/device-tree/qcom,board-id: 1 file pulled. 0.0 MB/s (8 bytes in 0.042s)
 
-╭─ ~/build/dumps                                  
+╭─ ~/build/dumps
 ╰─❯ adb pull /proc/device-tree/qcom,msm-id
 /proc/device-tree/qcom,msm-id: 1 file pulled. 0.0 MB/s (32 bytes in 0.041s)
 
@@ -521,6 +521,14 @@ int target_home()
 
 ## 根文件系统制作
 
+## **安装基础工具链**
+
+```bash
+sudo apt update -y
+sudo apt-get install -y qemu-user-static binfmt-support mmdebstrap arch-test usrmerge usr-is-merged
+sudo systemctl restart systemd-binfmt
+```
+
 ```bash
 mkdir -p rootfs
 sudo mmdebstrap \
@@ -561,14 +569,6 @@ sudo mount --bind /etc/resolv.conf rootfs/etc/resolv.conf
 
 # 设置本地上海时区
 (chroot) ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-```
-
-### wifi 驱动
-
-这里从原作者给出根文件系统拷贝 /lib/firmware/* 里的驱动到新制作的根文件系统，这里还没看驱动是从哪里编译的。
-
-```bash
-sudo cp -a tmp/lib/firmware/* rootfs/lib/firmware
 ```
 
 ### 添加 adbd 服务
@@ -669,9 +669,7 @@ esac
 (chroot) apt clean && rm -rf /var/cache/apt/archives/*
 ```
 
-## 镜像制作
-
-这里不重新构建内核，先用 openstick 提供的内核和boot.img，启动的磁盘已经写死到 boot.img 这里创建一个磁盘并设置原本的 UUID，
+### 转换镜像
 
 ```bash
 # 这里把 openstick 提供的 rootfs.img 转化为 root.img
@@ -681,14 +679,37 @@ simg2img rootfs.img root.img
 LOOP=$(sudo loestup -Pf --show root.img)
 mkdir tmp
 sudo mount $LOOP tmp
+```
 
+### 拷贝内核
+
+这里不重新构建内核，先用 openstick 提供的内核和boot.img。
+
+```bash
 # 拷贝内核和内核模块
 sudo cp -a tmp/boot/* rootfs/boot
 sudo mkdir rootfs/modules
 sudo cp -a tmp/modules/5.15.0-handsomekernel+ rootfs/modules
 ```
 
-创建一个新磁盘
+### 拷贝固件
+
+这里从原作者给出根文件系统拷贝 /lib/firmware/* 里的驱动到新制作的根文件系统。
+
+```bash
+sudo cp -a tmp/lib/firmware/* rootfs/lib/firmware
+```
+
+### 卸载设备
+
+```bash
+sudo umount -l rootfs tmp
+sudo losetup -D
+```
+
+## 镜像制作
+
+创建一个新磁盘，启动的磁盘已经写死到 boot.img 这里创建一个磁盘并设置原本的 UUID。
 
 ```bash
 dd if=/dev/zero of=root.img bs=1M count=1300
@@ -721,6 +742,8 @@ fastboot -S 200m flash rootfs rootfs.img
 ```bash
 edl w rootfs rootfs.img
 ```
+
+## 烧录镜像
 
 ## 参考
 
