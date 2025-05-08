@@ -36,6 +36,7 @@ export default defineConfig({
           { text: 'ISO与IMG镜像的全面对比', link: '/system/iso-img' },
           { text: '虚拟机软件', link: '/system/CodeVM-Lab' },
           { text: '安装 deepin 系统', link: '/system/install-deepin' },
+          { text: 'Termux', link: '/system/termux/termux' },
           {
             text: '系统移植',
             items: [
