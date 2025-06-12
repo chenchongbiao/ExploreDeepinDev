@@ -77,9 +77,10 @@ export default defineConfig({
             ]
           },
           {
-            text: 'JavaScript/TypeScript',
+            text: 'JavaScript',
             items: [
               { text: '基础语法', link: '...' },
+              { text: 'Node.js 环境搭建', link: '/dev-environment-guide/languages/JavaScript/deepin-nodejs' },
             ]
           },
           {
